@@ -7,13 +7,13 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using ServerSync;
 using UnityEngine;
-namespace HS_CraftedBossItems;
+namespace HS_CraftableBossItems;
 
 [BepInPlugin(ModGUID, ModName, ModVersion)]
-public class HS_CraftedBossItems : BaseUnityPlugin
+public class HS_CraftableBossItems : BaseUnityPlugin
 {
-	public const string ModGUID = "hs.craftedbossitems";
-	public const string ModName = "HS_CraftedBossItems";
+	public const string ModGUID = "hs.craftablebossitems";
+	public const string ModName = "HS_CraftableBossItems";
     public const string ModVersion = "0.1.0";
 
 	// Change MinimumRequiredVersion to the new version when changing config settings.
@@ -120,23 +120,23 @@ public class HS_CraftedBossItems : BaseUnityPlugin
 
 
         // TheElder
-        TheElderTable = Config.Bind("TheElder", "Table", CraftingTable.Workbench, "");
+        TheElderTable = Config.Bind("TheElder", "Table", CraftingTable.Forge, "Crafting station needed to construct CryptKey.");
         TheElderTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(TheElderTable.Value)).GetComponent<CraftingStation>();
-        TheElderRequirements = Config.Bind("TheElder", "Requirements", "TrophyDeer:20,Resin:2", "");
+        TheElderRequirements = Config.Bind("TheElder", "Requirements", "AncientSeed:5,Bronze:20", "The required items to construct CryptKey.");
         TheElderRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("CryptKey");
             if (recipe != null)
                 recipe.m_resources = GetRequrements(TheElderRequirements);
         };
-        TheElderAmount = Config.Bind("TheElder", "Amount", 1, "");
+        TheElderAmount = Config.Bind("TheElder", "Amount", 1, "The amount of CryptKey created.");
         TheElderAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("CryptKey");
             if (recipe != null)
                 recipe.m_amount = TheElderAmount.Value;
         };
-        TheElderLevel = Config.Bind("TheElder", "Level", 3, "");
+        TheElderLevel = Config.Bind("TheElder", "Level", 3, "Level of crafting station required to craft CryptKey.");
         TheElderLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("CryptKey");
@@ -145,23 +145,23 @@ public class HS_CraftedBossItems : BaseUnityPlugin
         };
 
         // Yagluth
-        YagluthTable = Config.Bind("Yagluth", "Table", CraftingTable.Workbench, "");
+        YagluthTable = Config.Bind("Yagluth", "Table", CraftingTable.ArtisanTable, "Crafting station needed to construct YagluthDrop.");
         YagluthTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(YagluthTable.Value)).GetComponent<CraftingStation>();
-        YagluthRequirements = Config.Bind("Yagluth", "Requirements", "TrophyDeer:20,Resin:2", "");
+        YagluthRequirements = Config.Bind("Yagluth", "Requirements", "GoblinTotem:10,TrophyGoblin:3,TrophyGoblinShaman:1,TrophyGoblinBrute:1", "The required items to construct YagluthDrop.");
         YagluthRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("YagluthDrop");
             if (recipe != null)
                 recipe.m_resources = GetRequrements(YagluthRequirements);
         };
-        YagluthAmount = Config.Bind("Yagluth", "Amount", 1, "");
+        YagluthAmount = Config.Bind("Yagluth", "Amount", 2, "The amount of YagluthDrop created.");
         YagluthAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("YagluthDrop");
             if (recipe != null)
                 recipe.m_amount = YagluthAmount.Value;
         };
-        YagluthLevel = Config.Bind("Yagluth", "Level", 3, "");
+        YagluthLevel = Config.Bind("Yagluth", "Level", 1, "Level of crafting station required to craft YagluthDrop.");
         YagluthLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("YagluthDrop");
@@ -170,23 +170,23 @@ public class HS_CraftedBossItems : BaseUnityPlugin
         };
 
         // Dragon Queen
-        DragonQueenTable = Config.Bind("DragonQueen", "Table", CraftingTable.Workbench, "");
+        DragonQueenTable = Config.Bind("Moder", "Table", CraftingTable.Workbench, "Crafting station needed to construct DragonTear.");
         DragonQueenTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(DragonQueenTable.Value)).GetComponent<CraftingStation>();
-        DragonQueenRequirements = Config.Bind("DragonQueen", "Requirements", "TrophyDeer:20,Resin:2", "");
+        DragonQueenRequirements = Config.Bind("Moder", "Requirements", "DragonEgg:3,Crystal:10", "The required items to construct DragonTear.");
         DragonQueenRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("DragonTear");
             if (recipe != null)
                 recipe.m_resources = GetRequrements(DragonQueenRequirements);
         };
-        DragonQueenAmount = Config.Bind("DragonQueen", "Amount", 1, "");
+        DragonQueenAmount = Config.Bind("Moder", "Amount", 2, "The amount of DragonTear created.");
         DragonQueenAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("DragonTear");
             if (recipe != null)
                 recipe.m_amount = DragonQueenAmount.Value;
         };
-        DragonQueenLevel = Config.Bind("DragonQueen", "Level", 3, "");
+        DragonQueenLevel = Config.Bind("Moder", "Level", 5, "Level of crafting station required to craft DragonTear.");
         DragonQueenLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("DragonTear");
@@ -195,23 +195,23 @@ public class HS_CraftedBossItems : BaseUnityPlugin
         };
 
         // Bonemass
-        BonemassTable = Config.Bind("Bonemass", "Table", CraftingTable.Workbench, "");
+        BonemassTable = Config.Bind("Bonemass", "Table", CraftingTable.Forge, "Crafting station needed to construct Wishbone.");
         BonemassTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(BonemassTable.Value)).GetComponent<CraftingStation>();
-        BonemassRequirements = Config.Bind("Bonemass", "Requirements", "TrophyDeer:20,Resin:2", "");
+        BonemassRequirements = Config.Bind("Bonemass", "Requirements", "WitheredBone:15,Iron:2,TrophyDraugr:3,TrophyDraugrElite:1", "The required items to construct Wishbone.");
         BonemassRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("Wishbone");
             if (recipe != null)
                 recipe.m_resources = GetRequrements(BonemassRequirements);
         };
-        BonemassAmount = Config.Bind("Bonemass", "Amount", 1, "");
+        BonemassAmount = Config.Bind("Bonemass", "Amount", 1, "The amount of Wishbone created.");
         BonemassAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("Wishbone");
             if (recipe != null)
                 recipe.m_amount = BonemassAmount.Value;
         };
-        BonemassLevel = Config.Bind("Bonemass", "Level", 3, "");
+        BonemassLevel = Config.Bind("Bonemass", "Level", 7, "Level of crafting station required to craft Wishbone.");
         BonemassLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("Wishbone");
@@ -220,23 +220,23 @@ public class HS_CraftedBossItems : BaseUnityPlugin
         };
 
         // The Queen
-        TheQueenTable = Config.Bind("TheQueen", "Table", CraftingTable.Workbench, "");
+        TheQueenTable = Config.Bind("TheQueen", "Table", CraftingTable.BlackForge, "Crafting station needed to construct QueenDrop.");
         TheQueenTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(TheQueenTable.Value)).GetComponent<CraftingStation>();
-        TheQueenRequirements = Config.Bind("TheQueen", "Requirements", "TrophyDeer:20,Resin:2", "");
+        TheQueenRequirements = Config.Bind("TheQueen", "Requirements", "DvergrKeyFragment:9,Mandible:5,TrophySeeker:3,TrophySeekerBrute:1", "The required items to construct QueenDrop.");
         TheQueenRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("QueenDrop");
             if (recipe != null)
                 recipe.m_resources = GetRequrements(TheQueenRequirements);
         };
-        TheQueenAmount = Config.Bind("TheQueen", "Amount", 1, "");
+        TheQueenAmount = Config.Bind("TheQueen", "Amount", 2, "The amount of QueenDrop created.");
         TheQueenAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("QueenDrop");
             if (recipe != null)
                 recipe.m_amount = TheQueenAmount.Value;
         };
-        TheQueenLevel = Config.Bind("TheQueen", "Level", 3, "");
+        TheQueenLevel = Config.Bind("TheQueen", "Level", 1, "Level of crafting station required to craft QueenDrop.");
         TheQueenLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("QueenDrop");
@@ -247,7 +247,7 @@ public class HS_CraftedBossItems : BaseUnityPlugin
         // Harmony Setup
         Harmony harmony = new Harmony(ModGUID);
         harmony.Patch(AccessTools.Method(typeof(ZNet), nameof(ZNet.Start)),
-            prefix: new HarmonyMethod(typeof(HS_CraftedBossItems), nameof(InvokeOnVanillaObjectsAvailable)) 
+            prefix: new HarmonyMethod(typeof(HS_CraftableBossItems), nameof(InvokeOnVanillaObjectsAvailable)) 
         );
     }
 

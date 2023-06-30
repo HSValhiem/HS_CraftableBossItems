@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
-    <AssemblyName>HS_CraftedBossItems</AssemblyName>
-    <Description>HS_CraftedBossItems</Description>
+    <AssemblyName>HS_CraftableBossItems</AssemblyName>
+    <Description>HS_CraftableBossItems</Description>
     <Version>0.1.0</Version>
 	<LangVersion>10</LangVersion>
 	<Nullable>enable</Nullable>
@@ -293,11 +293,6 @@
   
   	<Target Name="MyCustomBuildTask2" BeforeTargets="ILRepacker">
 		<Exec Command="xcopy &quot;$(OutputPath)Libs\BepInEx\&quot; &quot;$(OutputPath)&quot; /Y " />
-	</Target>
-
-	<Target Name="MyCustomBuildTask" AfterTargets="ILRepacker">
-		<Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;D:\Valheim_Dev\Valheim_Debug\BepInEx\plugins&quot; /Y " />
-		<Exec Condition="'$(Configuration)' != 'Release'" Command="xcopy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;D:\Valheim_Dev\Valheim_Debug\BepInEx\plugins&quot; /Y " />
 	</Target>
 
 </Project>
