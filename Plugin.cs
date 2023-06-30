@@ -110,7 +110,7 @@ public class HS_CraftableBossItems : BaseUnityPlugin
             if (recipe != null)
                 recipe.m_amount = EikythrAmount.Value;
         };
-        EikythrLevel = Config.Bind("2 - HardAntler (Eikythr)", "Level", 3, "Level of crafting station required to craft HardAntler.");
+        EikythrLevel = Config.Bind("2 - HardAntler (Eikythr)", "Station Level", 3, "Level of crafting station required to craft HardAntler.");
         EikythrLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("HardAntler");
@@ -136,7 +136,7 @@ public class HS_CraftableBossItems : BaseUnityPlugin
             if (recipe != null)
                 recipe.m_amount = TheElderAmount.Value;
         };
-        TheElderLevel = Config.Bind("3 - CryptKey (TheElder)", "Level", 3, "Level of crafting station required to craft CryptKey.");
+        TheElderLevel = Config.Bind("3 - CryptKey (TheElder)", "Station Level", 3, "Level of crafting station required to craft CryptKey.");
         TheElderLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("CryptKey");
@@ -161,7 +161,7 @@ public class HS_CraftableBossItems : BaseUnityPlugin
             if (recipe != null)
                 recipe.m_amount = BonemassAmount.Value;
         };
-        BonemassLevel = Config.Bind("4 - Wishbone (Bonemass)", "Level", 7, "Level of crafting station required to craft Wishbone.");
+        BonemassLevel = Config.Bind("4 - Wishbone (Bonemass)", "Station Level", 7, "Level of crafting station required to craft Wishbone.");
         BonemassLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("Wishbone");
@@ -186,7 +186,7 @@ public class HS_CraftableBossItems : BaseUnityPlugin
             if (recipe != null)
                 recipe.m_amount = DragonQueenAmount.Value;
         };
-        DragonQueenLevel = Config.Bind("5 - DragonTear (Moder)", "Level", 5, "Level of crafting station required to craft DragonTear.");
+        DragonQueenLevel = Config.Bind("5 - DragonTear (Moder)", "Station Level", 5, "Level of crafting station required to craft DragonTear.");
         DragonQueenLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("DragonTear");
@@ -211,7 +211,7 @@ public class HS_CraftableBossItems : BaseUnityPlugin
             if (recipe != null)
                 recipe.m_amount = YagluthAmount.Value;
         };
-        YagluthLevel = Config.Bind("6 - Yagluth", "Level", 1, "Level of crafting station required to craft Torn spirit.");
+        YagluthLevel = Config.Bind("6 - Yagluth", "Station Level", 1, "Level of crafting station required to craft Torn spirit.");
         YagluthLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("YagluthDrop");
@@ -236,7 +236,7 @@ public class HS_CraftableBossItems : BaseUnityPlugin
             if (recipe != null)
                 recipe.m_amount = TheQueenAmount.Value;
         };
-        TheQueenLevel = Config.Bind("7 - QueenDrop (TheQueen)", "Level", 1, "Level of crafting station required to craft QueenDrop.");
+        TheQueenLevel = Config.Bind("7 - QueenDrop (TheQueen)", "Station Level", 1, "Level of crafting station required to craft QueenDrop.");
         TheQueenLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("QueenDrop");
