@@ -220,23 +220,23 @@ public class HS_CraftableBossItems : BaseUnityPlugin
         };
 
         // The Queen
-        TheQueenTable = Config.Bind("7 - TheQueen", "Table", CraftingTable.BlackForge, "Crafting station needed to construct QueenDrop.");
+        TheQueenTable = Config.Bind("7 - QueenDrop (TheQueen)", "Table", CraftingTable.BlackForge, "Crafting station needed to construct QueenDrop.");
         TheQueenTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(TheQueenTable.Value)).GetComponent<CraftingStation>();
-        TheQueenRequirements = Config.Bind("7 - TheQueen", "Requirements", "DvergrKeyFragment:9,Mandible:5,TrophySeeker:3,TrophySeekerBrute:1", "The required items to construct QueenDrop.");
+        TheQueenRequirements = Config.Bind("7 - QueenDrop (TheQueen)", "Requirements", "DvergrKeyFragment:9,Mandible:5,TrophySeeker:3,TrophySeekerBrute:1", "The required items to construct QueenDrop.");
         TheQueenRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("QueenDrop");
             if (recipe != null)
                 recipe.m_resources = GetRequirements(TheQueenRequirements);
         };
-        TheQueenAmount = Config.Bind("7 - TheQueen", "Amount", 3, "The amount of QueenDrop created.");
+        TheQueenAmount = Config.Bind("7 - QueenDrop (TheQueen)", "Amount", 3, "The amount of QueenDrop created.");
         TheQueenAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("QueenDrop");
             if (recipe != null)
                 recipe.m_amount = TheQueenAmount.Value;
         };
-        TheQueenLevel = Config.Bind("7 - TheQueen", "Level", 1, "Level of crafting station required to craft QueenDrop.");
+        TheQueenLevel = Config.Bind("7 - QueenDrop (TheQueen)", "Level", 1, "Level of crafting station required to craft QueenDrop.");
         TheQueenLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("QueenDrop");
