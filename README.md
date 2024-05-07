@@ -1,13 +1,13 @@
 # HS Craftable Boss Items
 Introducing "CraftableBossItems," the Valheim mod that turns the tables on boss battles and lets you conquer the game without raising a weapon. 
 
-This mod empowers you to unleash your crafting prowess and create coveted boss drops with a touch of ingenuity and resourcefulness.
+This mod empowers you to unleash your crafting prowess and create coveted boss drops and trophies with a touch of ingenuity and resourcefulness.
 
 With CraftableBossItems, you'll embark on a unique adventure that blends strategy and creativity. 
 
 No longer must you face fearsome foes head-on; instead, embrace the challenge of outsmarting them with your crafting prowess. 
 
-Gather rare materials, master intricate recipes, and channel your inner alchemist to weave together boss drops like never before.
+Gather rare materials, master intricate recipes, and channel your inner alchemist to weave together boss drops and trophies like never before.
 
 ## Thanks!
 Special thanks to [probablykory](https://valheim.thunderstore.io/package/probablykory/) for their exemplary mod, which served as inspiration for this project. Their dedication in creating and maintaining such a long-standing mod is truly commendable.
@@ -37,6 +37,7 @@ Thank you for your understanding and cooperation in making **Craftable Boss Item
 3. Launch the game.
 
 ## Configuration
+Note: With Ashlands, you will need to set HideManagerGameObject to True in the BepInEx.cfg file to be able to use ConfigurationManger
 The configuration file allows you to specify requirements and station levels. You can access the configuration through the following methods:
 
 ### With r2modman Mod Manager:
