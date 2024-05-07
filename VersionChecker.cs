@@ -29,7 +29,7 @@ internal static class VersionChecker
             if (config != null) SetConfigAlert(config, errorMessage);
             return false;
         }
-        else if(allowWrongVersion)
+        else if (currentValheimVersion != ValheimVersion && allowWrongVersion)
         {
             logger.LogWarning($"Warning: This version of {info.Metadata.Name} v{info.Metadata.Version} was built for Valheim {ValheimVersion}," +
                 $" but you are running {currentValheimVersion}." +
