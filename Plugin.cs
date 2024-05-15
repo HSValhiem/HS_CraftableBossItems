@@ -15,7 +15,7 @@ namespace HS_CraftableBossItems;
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class Plugin : BaseUnityPlugin
 {
-	// Change MinimumRequiredVersion to the new version when changing config settings.
+	// Change MinimumRequiredVersion to the new version when changing Config settings.
 	public static ConfigSync ConfigSync = new(MyPluginInfo.PLUGIN_GUID)
 	{
 		DisplayName = MyPluginInfo.PLUGIN_NAME, CurrentVersion = MyPluginInfo.PLUGIN_VERSION, MinimumRequiredVersion = "0.1.1", ModRequired = true
@@ -24,6 +24,8 @@ public class Plugin : BaseUnityPlugin
     #region Config Defines
     private static ConfigEntry<Toggle> _serverConfigLocked = null!;
     private static ConfigEntry<bool> _modEnabled = null!;
+
+    private static ConfigEntry<bool> _overrideVersionCheck = null!;
 
     public static ConfigEntry<bool> EikythrDropEnabled = null!;
     public static ConfigEntry<CraftingTable> EikythrTable = null!;
@@ -118,19 +120,19 @@ public class Plugin : BaseUnityPlugin
 
     #region Config Boilerplate
 
-    private ConfigEntry<T> config<T>(string group, string name, T value, ConfigDescription description,
+    private ConfigEntry<T> Config<T>(string group, string name, T value, ConfigDescription description,
 		bool synchronizedSetting = true)
 	{
-		ConfigEntry<T> configEntry = Config.Bind(group, name, value, description);
+		ConfigEntry<T> configEntry = base.Config.Bind(group, name, value, description);
 		SyncedConfigEntry<T> syncedConfigEntry = ConfigSync.AddConfigEntry(configEntry);
 		syncedConfigEntry.SynchronizedConfig = synchronizedSetting;
 		return configEntry;
 	}
 
-	private ConfigEntry<T> config<T>(string group, string name, T value, string description,
+	private ConfigEntry<T> Config<T>(string group, string name, T value, string description,
 		bool synchronizedSetting = true)
 	{
-		return config(group, name, value, new ConfigDescription(description), synchronizedSetting);
+		return Config(group, name, value, new ConfigDescription(description), synchronizedSetting);
 	}
 
 	private enum Toggle
@@ -145,36 +147,36 @@ public class Plugin : BaseUnityPlugin
 
     public void Awake()
 	{
-        // Check if Plugin was Built for Current Version of Valheim
-        if (!VersionChecker.Check(HS_Logger, Info, true, Config)) return;
-
         #region Config Setup
 
-        // Genera Config Settings
-        _serverConfigLocked = config("1 - General", "Lock Configuration", Toggle.On, "If on, the configuration is locked and can be changed by server admins only.");
+        // General Config Settings
+        _serverConfigLocked = Config("1 - General", "Lock Configuration", Toggle.On, "If on, the configuration is locked and can be changed by server admins only.");
 		ConfigSync.AddLockingConfigEntry(_serverConfigLocked);
-        _modEnabled = config("1 - General", "Mod Enabled", true, "");
+        _modEnabled = Config("1 - General", "Mod Enabled", true, "");
         _modEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
 
+        _overrideVersionCheck = Config("1 - General", "Override Version Check", true,
+            new ConfigDescription("Set to True to override the Valheim version check and allow the mod to start even if an incorrect Valheim version is detected.",
+                null, new ConfigurationManagerAttributes { Browsable = false }));
 
         // Eikythr Drop
-        EikythrDropEnabled = config("2 - HardAntler (Eikythr)", "Boss Drop Enabled", true, " Enable Crafting of HardAntler");
+        EikythrDropEnabled = Config("2 - HardAntler (Eikythr)", "Boss Drop Enabled", true, " Enable Crafting of HardAntler");
         EikythrDropEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        EikythrTable = config("2 - HardAntler (Eikythr)", "Table", CraftingTable.Workbench, "Crafting station needed to construct HardAntler.");
+        EikythrTable = Config("2 - HardAntler (Eikythr)", "Table", CraftingTable.Workbench, "Crafting station needed to construct HardAntler.");
         EikythrTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(EikythrTable.Value)).GetComponent<CraftingStation>();
-        EikythrRequirements = config("2 - HardAntler (Eikythr)", "Requirements", "TrophyDeer:20,Resin:2", "The required items to construct HardAntler.");
+        EikythrRequirements = Config("2 - HardAntler (Eikythr)", "Requirements", "TrophyDeer:20,Resin:2", "The required items to construct HardAntler.");
         EikythrRequirements.SettingChanged += (_, _) => 
         {
             var recipe = GetRecipe("HardAntler");
             if (recipe != null) recipe.m_resources = GetRequirements(EikythrRequirements);
         };
-        EikythrAmount = config("2 - HardAntler (Eikythr)", "Amount", 1, "The amount of HardAntler created.");
+        EikythrAmount = Config("2 - HardAntler (Eikythr)", "Amount", 1, "The amount of HardAntler created.");
         EikythrAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("HardAntler");
             if (recipe != null) recipe.m_amount = EikythrAmount.Value;
         };
-        EikythrLevel = config("2 - HardAntler (Eikythr)", "Station Level", 3, "Level of crafting station required to craft HardAntler.");
+        EikythrLevel = Config("2 - HardAntler (Eikythr)", "Station Level", 3, "Level of crafting station required to craft HardAntler.");
         EikythrLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("HardAntler");
@@ -182,23 +184,23 @@ public class Plugin : BaseUnityPlugin
         };
 
         // Eikythr Trophy
-        EikythrTrophyEnabled = config("2 - TrophyEikthyr (Eikythr)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyEikthyr");
+        EikythrTrophyEnabled = Config("2 - TrophyEikthyr (Eikythr)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyEikthyr");
         EikythrTrophyEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        EikythrTrophyTable = config("2 - TrophyEikthyr (Eikythr)", "Table", CraftingTable.Workbench, "Crafting station needed to construct TrophyEikthyr.");
+        EikythrTrophyTable = Config("2 - TrophyEikthyr (Eikythr)", "Table", CraftingTable.Workbench, "Crafting station needed to construct TrophyEikthyr.");
         EikythrTrophyTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(EikythrTrophyTable.Value)).GetComponent<CraftingStation>();
-        EikythrTrophyRequirements = config("2 - TrophyEikthyr (Eikythr)", "Requirements", "TrophyDeer:20,Resin:2", "The required items to construct TrophyEikthyr.");
+        EikythrTrophyRequirements = Config("2 - TrophyEikthyr (Eikythr)", "Requirements", "TrophyDeer:20,Resin:2", "The required items to construct TrophyEikthyr.");
         EikythrTrophyRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyEikthyr");
             if (recipe != null) recipe.m_resources = GetRequirements(EikythrTrophyRequirements);
         };
-        EikythrTrophyAmount = config("2 - TrophyEikthyr (Eikythr)", "Amount", 1, "The amount of TrophyEikthyr created.");
+        EikythrTrophyAmount = Config("2 - TrophyEikthyr (Eikythr)", "Amount", 1, "The amount of TrophyEikthyr created.");
         EikythrTrophyAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyEikthyr");
             if (recipe != null) recipe.m_amount = EikythrTrophyAmount.Value;
         };
-        EikythrTrophyLevel = config("2 - HardAntler (Eikythr)", "Station Level", 3, "Level of crafting station required to craft TrophyEikthyr.");
+        EikythrTrophyLevel = Config("2 - HardAntler (Eikythr)", "Station Level", 3, "Level of crafting station required to craft TrophyEikthyr.");
         EikythrTrophyLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyEikthyr");
@@ -207,23 +209,23 @@ public class Plugin : BaseUnityPlugin
 
 
         // TheElder Drop
-        TheElderDropEnabled = config("3 - CryptKey (TheElder)", "Boss Drop Enabled", true, " Enable Crafting of CryptKey");
+        TheElderDropEnabled = Config("3 - CryptKey (TheElder)", "Boss Drop Enabled", true, " Enable Crafting of CryptKey");
         TheElderDropEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        TheElderTable = config("3 - CryptKey (TheElder)", "Table", CraftingTable.Forge, "Crafting station needed to construct CryptKey.");
+        TheElderTable = Config("3 - CryptKey (TheElder)", "Table", CraftingTable.Forge, "Crafting station needed to construct CryptKey.");
         TheElderTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(TheElderTable.Value)).GetComponent<CraftingStation>();
-        TheElderRequirements = config("3 - CryptKey (TheElder)", "Requirements", "AncientSeed:5,Bronze:20", "The required items to construct CryptKey.");
+        TheElderRequirements = Config("3 - CryptKey (TheElder)", "Requirements", "AncientSeed:5,Bronze:20", "The required items to construct CryptKey.");
         TheElderRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("CryptKey");
             if (recipe != null) recipe.m_resources = GetRequirements(TheElderRequirements);
         };
-        TheElderAmount = config("3 - CryptKey (TheElder)", "Amount", 1, "The amount of CryptKey created.");
+        TheElderAmount = Config("3 - CryptKey (TheElder)", "Amount", 1, "The amount of CryptKey created.");
         TheElderAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("CryptKey");
             if (recipe != null) recipe.m_amount = TheElderAmount.Value;
         };
-        TheElderLevel = config("3 - CryptKey (TheElder)", "Station Level", 3, "Level of crafting station required to craft CryptKey.");
+        TheElderLevel = Config("3 - CryptKey (TheElder)", "Station Level", 3, "Level of crafting station required to craft CryptKey.");
         TheElderLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("CryptKey");
@@ -231,23 +233,23 @@ public class Plugin : BaseUnityPlugin
         };
 
         // TheElder Trophy
-        TheElderTrophyEnabled = config("3 - TrophyTheElder (TheElder)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyTheElder");
+        TheElderTrophyEnabled = Config("3 - TrophyTheElder (TheElder)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyTheElder");
         TheElderTrophyEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        TheElderTrophyTable = config("3 - TrophyTheElder (TheElder)", "Table", CraftingTable.Forge, "Crafting station needed to construct TrophyTheElder.");
+        TheElderTrophyTable = Config("3 - TrophyTheElder (TheElder)", "Table", CraftingTable.Forge, "Crafting station needed to construct TrophyTheElder.");
         TheElderTrophyTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(TheElderTrophyTable.Value)).GetComponent<CraftingStation>();
-        TheElderTrophyRequirements = config("3 - TrophyTheElder (TheElder)", "Requirements", "AncientSeed:5,Bronze:20", "The required items to construct TrophyTheElder.");
+        TheElderTrophyRequirements = Config("3 - TrophyTheElder (TheElder)", "Requirements", "AncientSeed:5,Bronze:20", "The required items to construct TrophyTheElder.");
         TheElderTrophyRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyTheElder");
             if (recipe != null) recipe.m_resources = GetRequirements(TheElderTrophyRequirements);
         };
-        TheElderTrophyAmount = config("3 - TrophyTheElder (TheElder)", "Amount", 1, "The amount of TrophyTheElder created.");
+        TheElderTrophyAmount = Config("3 - TrophyTheElder (TheElder)", "Amount", 1, "The amount of TrophyTheElder created.");
         TheElderTrophyAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyTheElder");
             if (recipe != null) recipe.m_amount = TheElderTrophyAmount.Value;
         };
-        TheElderTrophyLevel = config("3 - TrophyTheElder (TheElder)", "Station Level", 3, "Level of crafting station required to craft TrophyTheElder.");
+        TheElderTrophyLevel = Config("3 - TrophyTheElder (TheElder)", "Station Level", 3, "Level of crafting station required to craft TrophyTheElder.");
         TheElderTrophyLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyTheElder");
@@ -256,23 +258,23 @@ public class Plugin : BaseUnityPlugin
 
 
         // Bonemass Drop
-        BonemassDropEnabled = config("4 - Wishbone (Bonemass)", "Boss Drop Enabled", true, " Enable Crafting of Wishbone");
+        BonemassDropEnabled = Config("4 - Wishbone (Bonemass)", "Boss Drop Enabled", true, " Enable Crafting of Wishbone");
         BonemassDropEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        BonemassTable = config("4 - Wishbone (Bonemass)", "Table", CraftingTable.Forge, "Crafting station needed to construct Wishbone.");
+        BonemassTable = Config("4 - Wishbone (Bonemass)", "Table", CraftingTable.Forge, "Crafting station needed to construct Wishbone.");
         BonemassTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(BonemassTable.Value)).GetComponent<CraftingStation>();
-        BonemassRequirements = config("4 - Wishbone (Bonemass)", "Requirements", "WitheredBone:15,Iron:2,TrophyDraugr:3,TrophyDraugrElite:1", "The required items to construct Wishbone.");
+        BonemassRequirements = Config("4 - Wishbone (Bonemass)", "Requirements", "WitheredBone:15,Iron:2,TrophyDraugr:3,TrophyDraugrElite:1", "The required items to construct Wishbone.");
         BonemassRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("Wishbone");
             if (recipe != null) recipe.m_resources = GetRequirements(BonemassRequirements);
         };
-        BonemassAmount = config("4 - Wishbone (Bonemass)", "Amount", 1, "The amount of Wishbone created.");
+        BonemassAmount = Config("4 - Wishbone (Bonemass)", "Amount", 1, "The amount of Wishbone created.");
         BonemassAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("Wishbone");
             if (recipe != null) recipe.m_amount = BonemassAmount.Value;
         };
-        BonemassLevel = config("4 - Wishbone (Bonemass)", "Station Level", 7, "Level of crafting station required to craft Wishbone.");
+        BonemassLevel = Config("4 - Wishbone (Bonemass)", "Station Level", 7, "Level of crafting station required to craft Wishbone.");
         BonemassLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("Wishbone");
@@ -280,23 +282,23 @@ public class Plugin : BaseUnityPlugin
         };
 
         // Bonemass Trophy
-        BonemassTrophyEnabled = config("4 - TrophyBonemass (Bonemass)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyBonemass");
+        BonemassTrophyEnabled = Config("4 - TrophyBonemass (Bonemass)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyBonemass");
         BonemassTrophyEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        BonemassTrophyTable = config("4 - TrophyBonemass (Bonemass)", "Table", CraftingTable.Forge, "Crafting station needed to construct TrophyBonemass.");
+        BonemassTrophyTable = Config("4 - TrophyBonemass (Bonemass)", "Table", CraftingTable.Forge, "Crafting station needed to construct TrophyBonemass.");
         BonemassTrophyTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(BonemassTrophyTable.Value)).GetComponent<CraftingStation>();
-        BonemassTrophyRequirements = config("4 - TrophyBonemass (Bonemass)", "Requirements", "WitheredBone:15,Iron:2,TrophyDraugr:3,TrophyDraugrElite:1", "The required items to construct TrophyBonemass.");
+        BonemassTrophyRequirements = Config("4 - TrophyBonemass (Bonemass)", "Requirements", "WitheredBone:15,Iron:2,TrophyDraugr:3,TrophyDraugrElite:1", "The required items to construct TrophyBonemass.");
         BonemassTrophyRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyBonemass");
             if (recipe != null) recipe.m_resources = GetRequirements(BonemassTrophyRequirements);
         };
-        BonemassTrophyAmount = config("4 - TrophyBonemass (Bonemass)", "Amount", 1, "The amount of TrophyBonemass created.");
+        BonemassTrophyAmount = Config("4 - TrophyBonemass (Bonemass)", "Amount", 1, "The amount of TrophyBonemass created.");
         BonemassTrophyAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyBonemass");
             if (recipe != null) recipe.m_amount = BonemassTrophyAmount.Value;
         };
-        BonemassTrophyLevel = config("4 - TrophyBonemass (Bonemass)", "Station Level", 7, "Level of crafting station required to craft TrophyBonemass.");
+        BonemassTrophyLevel = Config("4 - TrophyBonemass (Bonemass)", "Station Level", 7, "Level of crafting station required to craft TrophyBonemass.");
         BonemassTrophyLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyBonemass");
@@ -305,23 +307,23 @@ public class Plugin : BaseUnityPlugin
 
 
         // Dragon Queen Drop
-        DragonQueenDropEnabled = config("5 - DragonTear (Moder)", "Boss Drop Enabled", true, " Enable Crafting of DragonTear");
+        DragonQueenDropEnabled = Config("5 - DragonTear (Moder)", "Boss Drop Enabled", true, " Enable Crafting of DragonTear");
         DragonQueenDropEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        DragonQueenTable = config("5 - DragonTear (Moder)", "Table", CraftingTable.Workbench, "Crafting station needed to construct DragonTear.");
+        DragonQueenTable = Config("5 - DragonTear (Moder)", "Table", CraftingTable.Workbench, "Crafting station needed to construct DragonTear.");
         DragonQueenTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(DragonQueenTable.Value)).GetComponent<CraftingStation>();
-        DragonQueenRequirements = config("5 - DragonTear (Moder)", "Requirements", "DragonEgg:3,Crystal:10", "The required items to construct DragonTear.");
+        DragonQueenRequirements = Config("5 - DragonTear (Moder)", "Requirements", "DragonEgg:3,Crystal:10", "The required items to construct DragonTear.");
         DragonQueenRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("DragonTear");
             if (recipe != null) recipe.m_resources = GetRequirements(DragonQueenRequirements);
         };
-        DragonQueenAmount = config("5 - DragonTear (Moder)", "Amount", 5, "The amount of DragonTear created.");
+        DragonQueenAmount = Config("5 - DragonTear (Moder)", "Amount", 5, "The amount of DragonTear created.");
         DragonQueenAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("DragonTear");
             if (recipe != null) recipe.m_amount = DragonQueenAmount.Value;
         };
-        DragonQueenLevel = config("5 - DragonTear (Moder)", "Station Level", 5, "Level of crafting station required to craft DragonTear.");
+        DragonQueenLevel = Config("5 - DragonTear (Moder)", "Station Level", 5, "Level of crafting station required to craft DragonTear.");
         DragonQueenLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("DragonTear");
@@ -329,23 +331,23 @@ public class Plugin : BaseUnityPlugin
         };
 
         // Dragon Queen Trophy
-        DragonQueenTrophyEnabled = config("5 - TrophyDragonQueen (Moder)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyDragonQueen");
+        DragonQueenTrophyEnabled = Config("5 - TrophyDragonQueen (Moder)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyDragonQueen");
         DragonQueenTrophyEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        DragonQueenTrophyTable = config("5 - TrophyDragonQueen (Moder)", "Table", CraftingTable.Workbench, "Crafting station needed to construct TrophyDragonQueen.");
+        DragonQueenTrophyTable = Config("5 - TrophyDragonQueen (Moder)", "Table", CraftingTable.Workbench, "Crafting station needed to construct TrophyDragonQueen.");
         DragonQueenTrophyTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(DragonQueenTrophyTable.Value)).GetComponent<CraftingStation>();
-        DragonQueenTrophyRequirements = config("5 - TrophyDragonQueen (Moder)", "Requirements", "DragonEgg:3,Crystal:10", "The required items to construct TrophyDragonQueen.");
+        DragonQueenTrophyRequirements = Config("5 - TrophyDragonQueen (Moder)", "Requirements", "DragonEgg:3,Crystal:10", "The required items to construct TrophyDragonQueen.");
         DragonQueenTrophyRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyDragonQueen");
             if (recipe != null) recipe.m_resources = GetRequirements(DragonQueenTrophyRequirements);
         };
-        DragonQueenTrophyAmount = config("5 - TrophyDragonQueen (Moder)", "Amount", 1, "The amount of TrophyDragonQueen created.");
+        DragonQueenTrophyAmount = Config("5 - TrophyDragonQueen (Moder)", "Amount", 1, "The amount of TrophyDragonQueen created.");
         DragonQueenTrophyAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyDragonQueen");
             if (recipe != null) recipe.m_amount = DragonQueenTrophyAmount.Value;
         };
-        DragonQueenTrophyLevel = config("5 - TrophyDragonQueen (Moder)", "Station Level", 5, "Level of crafting station required to craft TrophyDragonQueen.");
+        DragonQueenTrophyLevel = Config("5 - TrophyDragonQueen (Moder)", "Station Level", 5, "Level of crafting station required to craft TrophyDragonQueen.");
         DragonQueenTrophyLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyDragonQueen");
@@ -354,23 +356,23 @@ public class Plugin : BaseUnityPlugin
 
 
         // Yagluth Drop
-        YagluthDropEnabled = config("6 - Torn spirit (Yagluth)", "Boss Drop Enabled", true, " Enable Crafting of Torn spirit");
+        YagluthDropEnabled = Config("6 - Torn spirit (Yagluth)", "Boss Drop Enabled", true, " Enable Crafting of Torn spirit");
         YagluthDropEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        YagluthTable = config("6 - Torn spirit (Yagluth)", "Table", CraftingTable.ArtisanTable, "Crafting station needed to construct Torn spirit.");
+        YagluthTable = Config("6 - Torn spirit (Yagluth)", "Table", CraftingTable.ArtisanTable, "Crafting station needed to construct Torn spirit.");
         YagluthTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(YagluthTable.Value)).GetComponent<CraftingStation>();
-        YagluthRequirements = config("6 - Torn spirit (Yagluth)", "Requirements", "GoblinTotem:10,TrophyGoblin:3,TrophyGoblinShaman:1,TrophyGoblinBrute:1", "The required items to construct Torn spirit.");
+        YagluthRequirements = Config("6 - Torn spirit (Yagluth)", "Requirements", "GoblinTotem:10,TrophyGoblin:3,TrophyGoblinShaman:1,TrophyGoblinBrute:1", "The required items to construct Torn spirit.");
         YagluthRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("YagluthDrop");
             if (recipe != null) recipe.m_resources = GetRequirements(YagluthRequirements);
         };
-        YagluthAmount = config("6 - Torn spirit (Yagluth)", "Amount", 3, "The amount of Torn spirit created.");
+        YagluthAmount = Config("6 - Torn spirit (Yagluth)", "Amount", 3, "The amount of Torn spirit created.");
         YagluthAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("YagluthDrop");
             if (recipe != null) recipe.m_amount = YagluthAmount.Value;
         };
-        YagluthLevel = config("6 - Torn spirit (Yagluth)", "Station Level", 1, "Level of crafting station required to craft Torn spirit.");
+        YagluthLevel = Config("6 - Torn spirit (Yagluth)", "Station Level", 1, "Level of crafting station required to craft Torn spirit.");
         YagluthLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("YagluthDrop");
@@ -378,23 +380,23 @@ public class Plugin : BaseUnityPlugin
         };
 
         // Yagluth Trophy
-        YagluthTrophyEnabled = config("6 - TrophyGoblinKing (Yagluth)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyGoblinKing");
+        YagluthTrophyEnabled = Config("6 - TrophyGoblinKing (Yagluth)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyGoblinKing");
         YagluthTrophyEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        YagluthTrophyTable = config("6 - TrophyGoblinKing (Yagluth)", "Table", CraftingTable.ArtisanTable, "Crafting station needed to construct TrophyGoblinKing.");
+        YagluthTrophyTable = Config("6 - TrophyGoblinKing (Yagluth)", "Table", CraftingTable.ArtisanTable, "Crafting station needed to construct TrophyGoblinKing.");
         YagluthTrophyTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(YagluthTrophyTable.Value)).GetComponent<CraftingStation>();
-        YagluthTrophyRequirements = config("6 - TrophyGoblinKing (Yagluth)", "Requirements", "GoblinTotem:10,TrophyGoblin:3,TrophyGoblinShaman:1,TrophyGoblinBrute:1", "The required items to construct TrophyGoblinKing.");
+        YagluthTrophyRequirements = Config("6 - TrophyGoblinKing (Yagluth)", "Requirements", "GoblinTotem:10,TrophyGoblin:3,TrophyGoblinShaman:1,TrophyGoblinBrute:1", "The required items to construct TrophyGoblinKing.");
         YagluthTrophyRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyGoblinKing");
             if (recipe != null) recipe.m_resources = GetRequirements(YagluthTrophyRequirements);
         };
-        YagluthTrophyAmount = config("6 - TrophyGoblinKing (Yagluth)", "Amount", 1, "The amount of TrophyGoblinKing created.");
+        YagluthTrophyAmount = Config("6 - TrophyGoblinKing (Yagluth)", "Amount", 1, "The amount of TrophyGoblinKing created.");
         YagluthTrophyAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyGoblinKing");
             if (recipe != null) recipe.m_amount = YagluthTrophyAmount.Value;
         };
-        YagluthTrophyLevel = config("6 - TrophyGoblinKing (Yagluth)", "Station Level", 1, "Level of crafting station required to craft TrophyGoblinKing.");
+        YagluthTrophyLevel = Config("6 - TrophyGoblinKing (Yagluth)", "Station Level", 1, "Level of crafting station required to craft TrophyGoblinKing.");
         YagluthTrophyLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyGoblinKing");
@@ -403,23 +405,23 @@ public class Plugin : BaseUnityPlugin
 
 
         // The Queen Drop
-        TheQueenDropEnabled = config("7 - QueenDrop (TheQueen)", "Boss Drop Enabled", true, " Enable Crafting of QueenDrop");
+        TheQueenDropEnabled = Config("7 - QueenDrop (TheQueen)", "Boss Drop Enabled", true, " Enable Crafting of QueenDrop");
         TheQueenDropEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        TheQueenTable = config("7 - QueenDrop (TheQueen)", "Table", CraftingTable.BlackForge, "Crafting station needed to construct QueenDrop.");
+        TheQueenTable = Config("7 - QueenDrop (TheQueen)", "Table", CraftingTable.BlackForge, "Crafting station needed to construct QueenDrop.");
         TheQueenTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(TheQueenTable.Value)).GetComponent<CraftingStation>();
-        TheQueenRequirements = config("7 - QueenDrop (TheQueen)", "Requirements", "DvergrKeyFragment:9,Mandible:5,TrophySeeker:3,TrophySeekerBrute:1", "The required items to construct QueenDrop.");
+        TheQueenRequirements = Config("7 - QueenDrop (TheQueen)", "Requirements", "DvergrKeyFragment:9,Mandible:5,TrophySeeker:3,TrophySeekerBrute:1", "The required items to construct QueenDrop.");
         TheQueenRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("QueenDrop");
             if (recipe != null) recipe.m_resources = GetRequirements(TheQueenRequirements);
         };
-        TheQueenAmount = config("7 - QueenDrop (TheQueen)", "Amount", 3, "The amount of QueenDrop created.");
+        TheQueenAmount = Config("7 - QueenDrop (TheQueen)", "Amount", 3, "The amount of QueenDrop created.");
         TheQueenAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("QueenDrop");
             if (recipe != null) recipe.m_amount = TheQueenAmount.Value;
         };
-        TheQueenLevel = config("7 - QueenDrop (TheQueen)", "Station Level", 1, "Level of crafting station required to craft QueenDrop.");
+        TheQueenLevel = Config("7 - QueenDrop (TheQueen)", "Station Level", 1, "Level of crafting station required to craft QueenDrop.");
         TheQueenLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("QueenDrop");
@@ -427,23 +429,23 @@ public class Plugin : BaseUnityPlugin
         };
 
         // The Queen Trophy
-        TheQueenTrophyEnabled = config("7 - TrophySeekerQueen (TheQueen)", "Boss Trophy Enabled", true, " Enable Crafting of TrophySeekerQueen");
+        TheQueenTrophyEnabled = Config("7 - TrophySeekerQueen (TheQueen)", "Boss Trophy Enabled", true, " Enable Crafting of TrophySeekerQueen");
         TheQueenTrophyEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        TheQueenTrophyTable = config("7 - TrophySeekerQueen (TheQueen)", "Table", CraftingTable.BlackForge, "Crafting station needed to construct TrophySeekerQueen.");
+        TheQueenTrophyTable = Config("7 - TrophySeekerQueen (TheQueen)", "Table", CraftingTable.BlackForge, "Crafting station needed to construct TrophySeekerQueen.");
         TheQueenTrophyTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(TheQueenTrophyTable.Value)).GetComponent<CraftingStation>();
-        TheQueenTrophyRequirements = config("7 - TrophySeekerQueen (TheQueen)", "Requirements", "DvergrKeyFragment:9,Mandible:5,TrophySeeker:3,TrophySeekerBrute:1", "The required items to construct TrophySeekerQueen.");
+        TheQueenTrophyRequirements = Config("7 - TrophySeekerQueen (TheQueen)", "Requirements", "DvergrKeyFragment:9,Mandible:5,TrophySeeker:3,TrophySeekerBrute:1", "The required items to construct TrophySeekerQueen.");
         TheQueenTrophyRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophySeekerQueen");
             if (recipe != null) recipe.m_resources = GetRequirements(TheQueenTrophyRequirements);
         };
-        TheQueenTrophyAmount = config("7 - TrophySeekerQueen (TheQueen)", "Amount", 1, "The amount of TrophySeekerQueen created.");
+        TheQueenTrophyAmount = Config("7 - TrophySeekerQueen (TheQueen)", "Amount", 1, "The amount of TrophySeekerQueen created.");
         TheQueenTrophyAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophySeekerQueen");
             if (recipe != null) recipe.m_amount = TheQueenTrophyAmount.Value;
         };
-        TheQueenTrophyLevel = config("7 - TrophySeekerQueen (TheQueen)", "Station Level", 1, "Level of crafting station required to craft TrophySeekerQueen.");
+        TheQueenTrophyLevel = Config("7 - TrophySeekerQueen (TheQueen)", "Station Level", 1, "Level of crafting station required to craft TrophySeekerQueen.");
         TheQueenTrophyLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophySeekerQueen");
@@ -452,23 +454,23 @@ public class Plugin : BaseUnityPlugin
 
 
         // Fader Drop
-        FaderDropEnabled = config("8 - FaderDrop (Fader)", "Boss Drop Enabled", true, " Enable Crafting of FaderDrop");
+        FaderDropEnabled = Config("8 - FaderDrop (Fader)", "Boss Drop Enabled", true, " Enable Crafting of FaderDrop");
         FaderDropEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        FaderTable = config("8 - FaderDrop (Fader)", "Table", CraftingTable.BlackForge, "Crafting station needed to construct FaderDrop.");
+        FaderTable = Config("8 - FaderDrop (Fader)", "Table", CraftingTable.BlackForge, "Crafting station needed to construct FaderDrop.");
         FaderTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(FaderTable.Value)).GetComponent<CraftingStation>();
-        FaderRequirements = config("8 - FaderDrop (Fader)", "Requirements", "BellFragment:3,CelestialFeather:5,TrophyAsksvin:3,TrophyMorgen:1", "The required items to construct FaderDrop.");
+        FaderRequirements = Config("8 - FaderDrop (Fader)", "Requirements", "BellFragment:3,CelestialFeather:5,TrophyAsksvin:3,TrophyMorgen:1", "The required items to construct FaderDrop.");
         FaderRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("FaderDrop");
             if (recipe != null) recipe.m_resources = GetRequirements(FaderRequirements);
         };
-        FaderAmount = config("8 - FaderDrop (Fader)", "Amount", 5, "The amount of FaderDrop created.");
+        FaderAmount = Config("8 - FaderDrop (Fader)", "Amount", 5, "The amount of FaderDrop created.");
         FaderAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("FaderDrop");
             if (recipe != null) recipe.m_amount = FaderAmount.Value;
         };
-        FaderLevel = config("8 - FaderDrop (Fader)", "Station Level", 2, "Level of crafting station required to craft FaderDrop.");
+        FaderLevel = Config("8 - FaderDrop (Fader)", "Station Level", 2, "Level of crafting station required to craft FaderDrop.");
         FaderLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("FaderDrop");
@@ -476,23 +478,23 @@ public class Plugin : BaseUnityPlugin
         };
 
         // Fader Trophy
-        FaderTrophyEnabled = config("8 - TrophyFader (Fader)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyFader");
+        FaderTrophyEnabled = Config("8 - TrophyFader (Fader)", "Boss Trophy Enabled", true, " Enable Crafting of TrophyFader");
         FaderTrophyEnabled.SettingChanged += (_, _) => InvokeOnVanillaObjectsAvailable();
-        FaderTrophyTable = config("8 - TrophyFader (Fader)", "Table", CraftingTable.BlackForge, "Crafting station needed to construct TrophyFader.");
+        FaderTrophyTable = Config("8 - TrophyFader (Fader)", "Table", CraftingTable.BlackForge, "Crafting station needed to construct TrophyFader.");
         FaderTrophyTable.SettingChanged += (_, _) => ZNetScene.instance.GetPrefab(GetInternalName(FaderTrophyTable.Value)).GetComponent<CraftingStation>();
-        FaderTrophyRequirements = config("8 - TrophyFader (Fader)", "Requirements", "BellFragment:3,CelestialFeather:5,TrophyAsksvin:3,TrophyMorgen:1", "The required items to construct TrophyFader.");
+        FaderTrophyRequirements = Config("8 - TrophyFader (Fader)", "Requirements", "BellFragment:3,CelestialFeather:5,TrophyAsksvin:3,TrophyMorgen:1", "The required items to construct TrophyFader.");
         FaderTrophyRequirements.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyFader");
             if (recipe != null) recipe.m_resources = GetRequirements(FaderTrophyRequirements);
         };
-        FaderTrophyAmount = config("8 - TrophyFader (Fader)", "Amount", 1, "The amount of TrophyFader created.");
+        FaderTrophyAmount = Config("8 - TrophyFader (Fader)", "Amount", 1, "The amount of TrophyFader created.");
         FaderTrophyAmount.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyFader");
             if (recipe != null) recipe.m_amount = FaderTrophyAmount.Value;
         };
-        FaderTrophyLevel = config("8 - TrophyFader (Fader)", "Station Level", 2, "Level of crafting station required to craft TrophyFader.");
+        FaderTrophyLevel = Config("8 - TrophyFader (Fader)", "Station Level", 2, "Level of crafting station required to craft TrophyFader.");
         FaderTrophyLevel.SettingChanged += (_, _) =>
         {
             var recipe = GetRecipe("TrophyFader");
@@ -501,8 +503,11 @@ public class Plugin : BaseUnityPlugin
 
         #endregion
 
+        // Check if Plugin was Built for Current Version of Valheim
+        if (!VersionChecker.Check(HS_Logger, Info, _overrideVersionCheck.Value, base.Config)) return;
+
         // Harmony Setup
-        Harmony harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+        var harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
         harmony.Patch(AccessTools.Method(typeof(ZNet), nameof(ZNet.Start)),
             prefix: new HarmonyMethod(typeof(Plugin), nameof(Plugin.InvokeOnVanillaObjectsAvailable)) 
         );
@@ -511,11 +516,12 @@ public class Plugin : BaseUnityPlugin
     // Harmony Patch
     public static void InvokeOnVanillaObjectsAvailable()
     {
-        //foreach (var gameObject in ObjectDB.instance.m_items)
-        //{
-        //    ItemDrop component = gameObject.GetComponent<ItemDrop>();
-        //    HS_Logger.LogWarning(component.gameObject.name);
-        //}
+#if DEBUG
+        ObjectDB.instance.m_items
+            .Select(gameObject => gameObject.GetComponent<ItemDrop>())
+            .ToList()
+            .ForEach(component => HS_Logger.LogWarning(component.gameObject.name));
+#endif
 
         if (_modEnabled.Value)
         {
@@ -573,8 +579,8 @@ public class Plugin : BaseUnityPlugin
     // Helper Functions
     public static void AddRecipe(string prefabName, CraftingTable table, int amount, int level, string requirements)
     {
-        GameObject prefab = ZNetScene.instance.GetPrefab(prefabName);
-        Recipe recipe = ScriptableObject.CreateInstance<Recipe>();
+        var prefab = ZNetScene.instance.GetPrefab(prefabName);
+        var recipe = ScriptableObject.CreateInstance<Recipe>();
         recipe.name = "Recipe_" + prefabName;
         recipe.m_item = prefab.GetComponent<ItemDrop>();
         recipe.m_amount = amount;
@@ -587,7 +593,7 @@ public class Plugin : BaseUnityPlugin
 
     public static void RemoveRecipe(string name) => ObjectDB.instance.m_recipes?.RemoveAll(recipe => recipe?.m_item != null && recipe.m_item.name == name);
 
-    public static Recipe? GetRecipe(string name) => ObjectDB.instance.m_recipes.FirstOrDefault(VARIABLE => VARIABLE.m_item != null && VARIABLE.m_item.name == name);
+    public static Recipe? GetRecipe(string name) => ObjectDB.instance.m_recipes.FirstOrDefault(recipe => recipe.m_item != null && recipe.m_item.name == name);
 
     public static Piece.Requirement[] GetRequirements(ConfigEntry<string> configEntry) =>
         SerializedRequirements.ToPieceReqs(ObjectDB.instance, new SerializedRequirements(configEntry.Value ?? ""), new SerializedRequirements(""));
@@ -604,11 +610,11 @@ public class Plugin : BaseUnityPlugin
         //Disabled,
         //Inventory,
         [InternalName("piece_workbench")] Workbench,
-        //[InternalName("piece_cauldron")] Cauldron,
+        [InternalName("piece_cauldron")] Cauldron,
         [InternalName("forge")] Forge,
         [InternalName("piece_artisanstation")] ArtisanTable,
-        //[InternalName("piece_stonecutter")] StoneCutter,
-        //[InternalName("piece_magetable")] MageTable,
+        [InternalName("piece_stonecutter")] StoneCutter,
+        [InternalName("piece_magetable")] MageTable,
         [InternalName("blackforge")] BlackForge
         //Custom
     }
@@ -648,16 +654,14 @@ public class Plugin : BaseUnityPlugin
 
         public static Piece.Requirement[] ToPieceReqs(ObjectDB objectDB, SerializedRequirements craft, SerializedRequirements upgrade)
         {
-            ItemDrop? ResItem(Requirement r) => FetchByName(objectDB, r.ItemName);
-
-            Dictionary<string, Piece.Requirement?> resources =
+            var resources =
                 craft.Requirements.Where(r => r.ItemName != "").
                     ToDictionary(r => r.ItemName, r => ResItem(r) is { } item ?
                         new Piece.Requirement { m_amount = r.AmountConfig?.Value ?? r.Amount, m_resItem = item, m_amountPerLevel = 0 } : null);
 
-            foreach (Requirement req in upgrade.Requirements.Where(r => r.ItemName != ""))
+            foreach (var req in upgrade.Requirements.Where(r => r.ItemName != ""))
             {
-                if ((!resources.TryGetValue(req.ItemName, out Piece.Requirement? requirement) || requirement == null) && ResItem(req) is { } item)
+                if ((!resources.TryGetValue(req.ItemName, out var requirement) || requirement == null) && ResItem(req) is { } item)
                 {
                     requirement = resources[req.ItemName] = new Piece.Requirement { m_resItem = item, m_amount = 0 };
                 }
@@ -669,6 +673,8 @@ public class Plugin : BaseUnityPlugin
             }
 
             return resources.Values.Where(v => v != null).ToArray()!;
+
+            ItemDrop? ResItem(Requirement r) => FetchByName(objectDB, r.ItemName);
         }
     }
     #endregion

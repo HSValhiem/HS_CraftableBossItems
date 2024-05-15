@@ -1,8 +1,8 @@
-﻿<!-- STUB VERSION 0.0.1-->
+﻿<!-- STUB VERSION 0.0.2-->
 <Project Sdk="Microsoft.NET.Sdk">
 	<!-- Static Config -->
 	<PropertyGroup>
-		<TargetFrameworks>net462</TargetFrameworks>
+		<TargetFrameworks>net472</TargetFrameworks>
 		<LangVersion>preview</LangVersion>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -16,14 +16,14 @@
 		<!-- Define BepInEx Plugin Name -->
 		<Product>$(MSBuildProjectName)</Product>
 		<!-- Define BepInEx Plugin Version -->
-		<Version>0.1.2</Version>
+		<Version>0.1.3</Version>
 		<!-- Define Plugin Folder Name with Leading and Trailing \ I.E \$(Authors).$(Product)\, Leave Blank to put Plugin in Root of Plugins Folder-->
 		<PluginFolderName></PluginFolderName>
 		<!-- Define Valheim Location, References and Plugins Directory Paths -->
-		<ValheimDevPath>F:\ValheimDev</ValheimDevPath>
+		<ValheimDevPath>D:\ValheimDev</ValheimDevPath>
 		<ValheimReferencesPath>$(ValheimDevPath)\Libs</ValheimReferencesPath>
-		<ValheimBepInExPluginsPath>D:\SteamLibrary\steamapps\common\Valheim\BepInEx\Plugins</ValheimBepInExPluginsPath>
-		<ValheimEXEPath>D:\SteamLibrary\steamapps\common\Valheim\valheim.exe</ValheimEXEPath>
+		<ValheimBepInExPluginsPath>$(ValheimDevPath)\Valheim\BepInEx\Plugins</ValheimBepInExPluginsPath>
+		<ValheimEXEPath>$(ValheimDevPath)\Valheim\valheim.exe</ValheimEXEPath>
 		<!-- Set True to Start Valheim After Build -->
 		<LaunchValheim>True</LaunchValheim>
 		<LaunchValheimRelease>False</LaunchValheimRelease>
@@ -41,9 +41,6 @@
 		<None Remove="assets\**" />
 		<None Remove="ThunderStore\**" />
 		<None Remove="translations\**" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<None Remove="README.md" />
 	</ItemGroup>
 
@@ -67,17 +64,17 @@
 	<!-- Valheim References -->
 	<ItemGroup>
 		<Reference Include="assembly_valheim" Publicize="true">
-		<HintPath>$(ValheimReferencesPath)\Valheim\assembly_valheim.dll</HintPath>
+			<HintPath>$(ValheimReferencesPath)\Valheim\assembly_valheim.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
 	<!-- Unity References -->
 	<ItemGroup>
 		<Reference Include="UnityEngine">
-		<HintPath>$(ValheimReferencesPath)\unstripped_corlib\UnityEngine.dll</HintPath>
+			<HintPath>$(ValheimReferencesPath)\unstripped_corlib\UnityEngine.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.CoreModule">
-		<HintPath>$(ValheimReferencesPath)\unstripped_corlib\UnityEngine.CoreModule.dll</HintPath>
+			<HintPath>$(ValheimReferencesPath)\unstripped_corlib\UnityEngine.CoreModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.IMGUIModule">
 			<HintPath>$(ValheimReferencesPath)\unstripped_corlib\UnityEngine.IMGUIModule.dll</HintPath>
@@ -117,7 +114,7 @@
 			</Code>
 		</Task>
 	</UsingTask>
-	
+
 	<!-- Search the manifest file for the next Non-Empty line after "# Xbox Game Preview" line and return the Version -->
 	<UsingTask TaskName="FindValheimVersion" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
 		<ParameterGroup>
@@ -183,7 +180,7 @@
 			</Code>
 		</Task>
 	</UsingTask>
-	
+
 	<!-- Get and Update Valheim Version for the VersionChecker -->
 	<Target Name="UpdateVersion" BeforeTargets="BeforeBuild">
 		<!-- Get Manifest Name that Contains the Changelog Asset -->
@@ -198,7 +195,9 @@
 		<Message Text="Detected Valheim Version: $(ValheimVersionResult)" Importance="High" />
 
 		<!-- Update VersionChecker.cs with the Detected Version -->
-		<ItemGroup><ValheimVersionReplacmentPattern Include="private const string ValheimVersion = &quot;(.*?)&quot;;" /></ItemGroup>
+		<ItemGroup>
+			<ValheimVersionReplacmentPattern Include="private const string ValheimVersion = &quot;(.*?)&quot;;" />
+		</ItemGroup>
 		<FileUpdate Files="$(MSBuildProjectDirectory)\VersionChecker.cs" Regex="@(ValheimVersionReplacmentPattern)" ReplacementText="private const string ValheimVersion = &quot;$(ValheimVersionResult)&quot;" />
 	</Target>
 
@@ -222,7 +221,7 @@
 			<ManifestFilePath>$(SolutionDir)ThunderStore\manifest.json</ManifestFilePath>
 			<ThunderStoreTarget>$(SolutionDir)ThunderStore\$(Product)-$(Version)</ThunderStoreTarget>
 		</PropertyGroup>
-		
+
 		<!-- Update manifest.json with the Current Mod Version -->
 		<ItemGroup>
 			<VersionReplacmentPattern Include="&quot;version_number&quot;: &quot;(.*?)&quot;;" />
@@ -246,7 +245,7 @@
 		<Exec Command="xcopy &quot;$(SolutionDir)ThunderStore\icon.png&quot; &quot;$(ThunderStoreTarget)&quot; /Y /I" />
 
 		<!-- Zip Mod -->
-		<Exec Command="del &quot;$(ThunderStoreTarget).zip&quot;" ContinueOnError="true" />
+		<Exec Command="del $(SolutionDir)ThunderStore\*.zip" ContinueOnError="true" />
 		<Exec Command="Tar -a -cf &quot;$(ThunderStoreTarget).zip&quot; -C &quot;$(ThunderStoreTarget)&quot; *.*" />
 		<RemoveDir Directories="$(ThunderStoreTarget)" />
 

@@ -4,6 +4,7 @@
 		<ItemGroup>
 			<InputAssemblies Include="$(TargetPath)" />
 			<InputAssemblies Include="$(OutputPath)\ServerSync.dll" />
+			<!--For VersionChecker-->
 			<InputAssemblies Include="$(OutputPath)\MonoMod.Backports.dll" />
 			<InputAssemblies Include="$(OutputPath)\MonoMod.ILHelpers.dll" />
 		</ItemGroup>
