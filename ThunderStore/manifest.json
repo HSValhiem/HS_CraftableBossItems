@@ -1,0 +1,9 @@
+{
+    "name": "HS_CraftableBossItems",
+    "version_number": "0.1.4",
+    "website_url": "https://github.com/HSValhiem/HS_CraftableBossItems",
+    "description": "Craft boss drops and boss trophies at crafting stations, with configurable recipes, amounts and station levels synced from the server.",
+    "dependencies": [
+        "denikson-BepInExPack_Valheim-5.4.2360"
+    ]
+}
