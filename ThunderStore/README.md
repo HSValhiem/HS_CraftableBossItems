@@ -19,6 +19,9 @@ Massive Thanks to [Smoothbrain](https://valheim.thunderstore.io/package/Smoothbr
 
 This mod uses the ServerSync Library from [Smoothbrain](https://valheim.thunderstore.io/package/Smoothbrain/) to enable Server-Client Config Synchronization.
 
+## AI Disclosure
+This release (0.1.4) was made with AI help. The code changes, the build and packaging setup, and the README and changelog text were written with Claude (Anthropic) in Claude Code. Every change was reviewed and tested in game before release.
+
 ## Beta Version Notice:
 
 Please note that the current version of this mod, **Craftable Boss Items**, is in beta stage. While we have thoroughly tested its functionality, there might still be some unforeseen issues or bugs.

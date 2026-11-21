@@ -8,6 +8,7 @@
 - Fixed: changing a recipe's crafting station did nothing until restart. Station and requirement changes now rebuild the recipe at once.
 - Fixed: changing settings before a world was loaded (for example from the main menu or a server sync) could throw errors. Those changes now apply when the world loads.
 - ServerSync minimum required version raised to 0.1.4: clients and servers must both run 0.1.4.
+- Added: AI disclosure section in the README.
 - Note: the TrophyEikthyr station level moved to its own key, so it resets to 3. Set it again under "2 - TrophyEikthyr (Eikythr)". The old shared "Station Level" key under "2 - HardAntler (Eikythr)" stays and keeps the HardAntler value.
 - Built for Valheim 1.0.21 with the HS_ModStub build pipeline (net48, pinned ServerSync, no machine paths in the project).
 - The Thunderstore page now links to https://github.com/HSValhiem/HS_CraftableBossItems.
